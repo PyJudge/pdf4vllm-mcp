@@ -55,10 +55,8 @@ config.json
 # Deployment documentation (internal only)
 DEPLOYMENT.md
 
-# Sample PDFs and test files
-sample_pdfs/
+# Test files (sample_pdfs/ is included for demo)
 test_pdfs/
-*.pdf
 
 # PyPI deployment
 .pypirc
