@@ -236,7 +236,7 @@ python scripts/install_mcp.py
 
 The script automatically:
 - Detects your OS (Windows/macOS/Linux)
-- Finds Python and Poppler paths
+- Finds Python path
 - Creates Claude Desktop config with correct settings
 - Backs up existing config
 
@@ -470,7 +470,7 @@ extraction_mode: "image_only"
 **MIT**
 
 **Dependencies:**
-- pdf2image: MIT
+- pypdfium2: Apache 2.0 / BSD
 - pikepdf: MPL 2.0
 - pdfplumber: MIT
 - Pillow: HPND

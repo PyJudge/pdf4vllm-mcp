@@ -235,7 +235,7 @@ python scripts/install_mcp.py
 
 스크립트가 자동으로:
 - OS 감지 (Windows/macOS/Linux)
-- Python과 Poppler 경로 찾기
+- Python 경로 찾기
 - 올바른 설정으로 Claude Desktop 설정 파일 생성
 - 기존 설정 백업
 
