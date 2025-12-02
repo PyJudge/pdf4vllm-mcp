@@ -32,6 +32,8 @@ pdf4vllm은 **PDF가 지저분하다고 가정**합니다.
 
 ```bash
 pip install pdf4vllm-mcp
+# 또는
+uvx pdf4vllm-mcp
 ```
 
 ## Claude Desktop 설정
@@ -102,6 +104,8 @@ Ordered Blocks (JSON)
 
 ```bash
 pip install pdf4vllm-mcp
+# or run without installing
+uvx pdf4vllm-mcp
 ```
 
 ## Claude Desktop Setup
@@ -133,8 +137,8 @@ Create `.mcp.json` in your project:
 {
   "mcpServers": {
     "pdf4vllm": {
-      "command": "python",
-      "args": ["-m", "src.server"]
+      "command": "uvx",
+      "args": ["pdf4vllm-mcp"]
     }
   }
 }
