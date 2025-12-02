@@ -1,0 +1,8 @@
+tasks:
+  - init: pip install -e ".[test]"
+    command: python test_server.py
+
+ports:
+  - port: 8000
+    onOpen: open-browser
+    visibility: public
