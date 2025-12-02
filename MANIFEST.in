@@ -1,0 +1,22 @@
+# Include documentation
+include README.md
+include README.ko.md
+include LICENSE
+include DEPLOYMENT.md
+
+# Include configuration examples
+include config.example.json
+
+# Include scripts
+include run_test.sh
+
+# Exclude test files and cache
+global-exclude __pycache__
+global-exclude *.py[cod]
+global-exclude *.so
+global-exclude .DS_Store
+
+# Exclude sample PDFs and config
+exclude config.json
+recursive-exclude sample_pdfs *
+recursive-exclude tests *

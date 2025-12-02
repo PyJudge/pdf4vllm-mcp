@@ -1,0 +1,21 @@
+{
+  "_comment": "PDF MCP for vLLM Configuration - Copy this to config.json and modify as needed",
+
+  "max_pages_per_request": 10,
+  "_max_pages_per_request_comment": "Maximum pages per read request (default: 10). Increase for longer documents, decrease to limit context size.",
+
+  "max_images_per_request": 50,
+  "_max_images_per_request_comment": "Maximum images per read request (default: 50). Adjust based on your LLM's context window.",
+
+  "max_image_dimension": 842,
+  "_max_image_dimension_comment": "Maximum image dimension in pixels (default: 842 = A4 height at 100 DPI). Images larger than this are scaled down.",
+
+  "min_image_dimension": 28,
+  "_min_image_dimension_comment": "Minimum image dimension in pixels (default: 28). Images smaller than this are filtered out (removes separators, icons).",
+
+  "max_aspect_ratio": 15,
+  "_max_aspect_ratio_comment": "Maximum width/height ratio (default: 15). Filters extreme aspect ratios like lines and separators. Set to 0 to disable.",
+
+  "page_image_dpi": 100,
+  "_page_image_dpi_comment": "DPI for full page images when text is corrupted (default: 100). Higher values = larger images but better quality."
+}

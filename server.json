@@ -1,0 +1,34 @@
+{
+  "name": "io.github.pyjudge/pdf4vllm-mcp",
+  "version": "1.0.0",
+  "description": "PDF MCP for vLLM - Block-based PDF extraction optimized for vLLM. Extracts text, table, and image blocks from PDFs with intelligent ordering.",
+  "repository": "https://github.com/PyJudge/pdf4vllm-mcp",
+  "homepage": "https://github.com/PyJudge/pdf4vllm-mcp",
+  "license": "MIT",
+  "tags": [
+    "pdf",
+    "extraction",
+    "ocr",
+    "document",
+    "text",
+    "table",
+    "image",
+    "llm",
+    "claude",
+    "vision"
+  ],
+  "package": {
+    "registry": "pypi",
+    "name": "pdf4vllm-mcp"
+  },
+  "tools": [
+    {
+      "name": "list_pdfs",
+      "description": "List all PDF files in specified directory"
+    },
+    {
+      "name": "read_pdf",
+      "description": "Extract text, table, and image blocks from PDF with intelligent ordering"
+    }
+  ]
+}

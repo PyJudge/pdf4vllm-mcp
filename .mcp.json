@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "pdf4vllm": {
+      "command": "/opt/anaconda3/envs/pdfmcp/bin/python",
+      "args": ["-m", "src.server"]
+    }
+  }
+}
