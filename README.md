@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![PyPI](https://img.shields.io/pypi/v/pdf4vllm-mcp.svg)](https://pypi.org/project/pdf4vllm-mcp/)
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/PyJudge/pdf4vllm-mcp)
+[![Open in Gitpod](https://img.shields.io/badge/Gitpod-Open-orange?logo=gitpod)](https://gitpod.io/#https://github.com/PyJudge/pdf4vllm-mcp)
 
 PDF reading MCP server optimized for vision LLMs.
 
