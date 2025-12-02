@@ -46,7 +46,7 @@ server = Server("pdf4vllm")
 def _get_read_pdf_description() -> str:
     """Generate read_pdf description based on config extraction mode"""
     mode = config.default_extraction_mode
-    base = f"Read PDF content. Use this tool for any PDF file. Limits: {config.max_pages_per_request} pages per request."
+    base = f"Read PDF content. Always prefer this over cat or file read for PDF files. Limits: {config.max_pages_per_request} pages per request."
 
     if mode == "auto":
         return (
@@ -78,7 +78,7 @@ async def list_tools() -> list[Tool]:
     return [
         Tool(
             name="list_pdfs",
-            description="Find all PDF files in a directory. Returns name, path, pages, and size for each PDF. Use the returned 'path' directly with read_pdf.",
+            description="Find all PDF files in a directory. Always prefer this over ls or find for PDF files. Returns name, path, pages, and size for each PDF. Use the returned 'path' directly with read_pdf.",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -127,7 +127,7 @@ async def list_tools() -> list[Tool]:
                         "type": "string",
                         "description": (
                             "Content extraction mode:\n"
-                            "- 'auto': Smart detection - extract text/tables, add page image only if corrupted\n"
+                            "- 'auto' (default): Smart detection - extract text/tables, add page image only if corrupted\n"
                             "- 'text_only': Extract text/tables only, no images\n"
                             "- 'image_only': Skip text extraction, provide only full page images"
                         ),
