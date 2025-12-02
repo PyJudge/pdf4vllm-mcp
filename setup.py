@@ -11,7 +11,7 @@ long_description = readme_path.read_text(encoding="utf-8") if readme_path.exists
 
 setup(
     name="pdf4vllm-mcp",
-    version="1.0.1",
+    version="1.0.2",
     description="Block-based PDF extraction MCP server optimized for LLM consumption",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -41,6 +41,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
+            "pdf4vllm=src.server:run",
             "pdf4vllm-test=test_server:run",
         ],
     },

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pdf4vllm-mcp"
-version = "1.0.1"
+version = "1.0.2"
 description = "Block-based PDF extraction MCP server optimized for LLM consumption"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -48,6 +48,7 @@ Repository = "https://github.com/PyJudge/pdf4vllm-mcp"
 Issues = "https://github.com/PyJudge/pdf4vllm-mcp/issues"
 
 [project.scripts]
+pdf4vllm = "src.server:run"
 pdf4vllm-test = "test_server:run"
 
 [tool.setuptools]
