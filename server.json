@@ -1,22 +1,20 @@
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
-  "name": "io.github.pyjudge/pdf4vllm",
-  "title": "pdf4vllm",
-  "description": "PDF reading MCP server optimized for vision LLMs. Auto-detects text corruption and switches to image mode. Preserves reading order with structured blocks.",
-  "version": "1.0.0",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+  "name": "io.github.PyJudge/pdf4vllm",
+  "description": "PDF reader for vision LLMs. Auto-detects text corruption and switches to image mode.",
   "repository": {
     "url": "https://github.com/PyJudge/pdf4vllm-mcp",
     "source": "github"
   },
+  "version": "1.0.1",
   "packages": [
     {
-      "registry_name": "pypi",
-      "name": "pdf4vllm-mcp",
-      "version": "1.0.0",
-      "runtime": "python",
-      "runtime_hint": ">=3.10",
-      "transport": ["stdio"],
-      "args": ["-m", "src.server"]
+      "registryType": "pypi",
+      "identifier": "pdf4vllm-mcp",
+      "version": "1.0.1",
+      "transport": {
+        "type": "stdio"
+      }
     }
   ]
 }

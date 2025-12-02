@@ -6,6 +6,8 @@
 
 PDF reading MCP server optimized for vision LLMs.
 
+<!-- mcp-name: io.github.PyJudge/pdf4vllm -->
+
 <details>
 <summary><b>한국어</b></summary>
 
