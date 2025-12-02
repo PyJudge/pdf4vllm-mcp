@@ -1,34 +1,22 @@
 {
-  "name": "io.github.pyjudge/pdf4vllm-mcp",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "name": "io.github.pyjudge/pdf4vllm",
+  "title": "pdf4vllm",
+  "description": "PDF reading MCP server optimized for vision LLMs. Auto-detects text corruption and switches to image mode. Preserves reading order with structured blocks.",
   "version": "1.0.0",
-  "description": "PDF MCP for vLLM - Block-based PDF extraction optimized for vLLM. Extracts text, table, and image blocks from PDFs with intelligent ordering.",
-  "repository": "https://github.com/PyJudge/pdf4vllm-mcp",
-  "homepage": "https://github.com/PyJudge/pdf4vllm-mcp",
-  "license": "MIT",
-  "tags": [
-    "pdf",
-    "extraction",
-    "ocr",
-    "document",
-    "text",
-    "table",
-    "image",
-    "llm",
-    "claude",
-    "vision"
-  ],
-  "package": {
-    "registry": "pypi",
-    "name": "pdf4vllm-mcp"
+  "repository": {
+    "url": "https://github.com/PyJudge/pdf4vllm-mcp",
+    "source": "github"
   },
-  "tools": [
+  "packages": [
     {
-      "name": "list_pdfs",
-      "description": "List all PDF files in specified directory"
-    },
-    {
-      "name": "read_pdf",
-      "description": "Extract text, table, and image blocks from PDF with intelligent ordering"
+      "registry_name": "pypi",
+      "name": "pdf4vllm-mcp",
+      "version": "1.0.0",
+      "runtime": "python",
+      "runtime_hint": ">=3.10",
+      "transport": ["stdio"],
+      "args": ["-m", "src.server"]
     }
   ]
 }
