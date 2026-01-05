@@ -57,6 +57,14 @@ python scripts/install_mcp.py
 }
 ```
 
+## 도구
+
+| 도구 | 설명 |
+|------|------|
+| `list_pdfs` | PDF 파일 찾기 (glob 패턴 `name_pattern` 지원) |
+| `read_pdf` | PDF 내용 블록으로 추출 |
+| `grep_pdf` | PDF 내 텍스트 검색 (`pdfgrep` 설치 필요) |
+
 ## 추출 모드
 
 | 모드 | 설명 |
@@ -143,6 +151,14 @@ Create `.mcp.json` in your project:
   }
 }
 ```
+
+## Tools
+
+| Tool | Description |
+|------|-------------|
+| `list_pdfs` | Find PDF files with glob filtering (`name_pattern`) |
+| `read_pdf` | Extract PDF content as ordered blocks |
+| `grep_pdf` | Search text in PDFs using pdfgrep (requires `pdfgrep` installed) |
 
 ## Extraction Modes
 
