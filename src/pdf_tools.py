@@ -116,7 +116,7 @@ async def list_pdfs_handler(arguments: dict[str, Any]) -> tuple[str, list[dict]]
 
         # Find PDF files
         pdfs = []
-        pattern = "**/*.pdf" if input_data.include_subdirectories else "*.pdf"
+        pattern = "**/*.pdf" if input_data.recursive else "*.pdf"
         max_depth = input_data.max_depth
 
         for pdf_path in sorted(working_dir.glob(pattern)):
@@ -126,7 +126,7 @@ async def list_pdfs_handler(arguments: dict[str, Any]) -> tuple[str, list[dict]]
                     continue
 
                 # Check depth limit
-                if max_depth is not None and input_data.include_subdirectories:
+                if max_depth is not None and input_data.recursive:
                     relative_path = pdf_path.relative_to(working_dir)
                     depth = len(relative_path.parts) - 1  # -1 for filename
                     if depth > max_depth:
@@ -732,6 +732,10 @@ async def grep_pdf_handler(arguments: dict[str, Any]) -> tuple[str, list[dict]]:
             cmd.extend(["-m", str(input_data.max_count)])
         if input_data.recursive and not input_data.file_path:
             cmd.append("-r")
+        # Only add --page-range if not using defaults (start=1, end=all)
+        if input_data.start_page != 1 or input_data.end_page is not None:
+            end = input_data.end_page or 9999  # pdfgrep handles out-of-range gracefully
+            cmd.extend(["--page-range", f"{input_data.start_page}-{end}"])
 
         cmd.append(input_data.pattern)
         cmd.append(str(target_path))

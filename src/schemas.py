@@ -16,7 +16,7 @@ class ListPDFsInput(BaseModel):
         default=".",
         description="Working directory to search for PDFs (relative or absolute)"
     )
-    include_subdirectories: bool = Field(
+    recursive: bool = Field(
         default=True,
         description="Include subdirectories in search"
     )
@@ -246,10 +246,10 @@ class GrepPDFInput(BaseModel):
         description="Treat pattern as literal string, not regex"
     )
     context: int = Field(
-        default=0,
+        default=2,
         ge=0,
         le=5,
-        description="Lines of context before/after match (0-5)"
+        description="Lines of context before/after match (0-5, default: 2)"
     )
     max_count: int = Field(
         default=20,
@@ -260,6 +260,16 @@ class GrepPDFInput(BaseModel):
     recursive: bool = Field(
         default=True,
         description="Include subdirectories when searching directory"
+    )
+    start_page: int = Field(
+        default=1,
+        ge=1,
+        description="Start page number (1-indexed, inclusive)"
+    )
+    end_page: Optional[int] = Field(
+        default=None,
+        ge=1,
+        description="End page number (1-indexed, inclusive). None = last page"
     )
 
 

@@ -90,7 +90,7 @@ async def list_tools() -> list[Tool]:
                         "description": "Working directory to search (relative or absolute path, default: current directory)",
                         "default": "."
                     },
-                    "include_subdirectories": {
+                    "recursive": {
                         "type": "boolean",
                         "description": "Whether to include subdirectories",
                         "default": True
@@ -173,7 +173,8 @@ async def list_tools() -> list[Tool]:
             name="grep_pdf",
             description=(
                 "Search text in PDFs. Use instead of read_pdf to find specific text. "
-                "Returns matching lines with page numbers."
+                "Returns matching lines with page numbers. "
+                "NOTE: No page limit (unlike read_pdf's 10-page limit)."
             ),
             inputSchema={
                 "type": "object",
@@ -203,8 +204,8 @@ async def list_tools() -> list[Tool]:
                     },
                     "context": {
                         "type": "integer",
-                        "description": "Lines of context before/after match (0-5)",
-                        "default": 0,
+                        "description": "Lines of context before/after match (0-5, default: 2)",
+                        "default": 2,
                         "minimum": 0,
                         "maximum": 5
                     },
@@ -219,6 +220,17 @@ async def list_tools() -> list[Tool]:
                         "type": "boolean",
                         "description": "Include subdirectories when searching directory",
                         "default": True
+                    },
+                    "start_page": {
+                        "type": "integer",
+                        "description": "Start page (1-indexed, inclusive)",
+                        "default": 1,
+                        "minimum": 1
+                    },
+                    "end_page": {
+                        "type": "integer",
+                        "description": "End page (1-indexed, inclusive). None = last page",
+                        "minimum": 1
                     }
                 },
                 "required": ["pattern"]
