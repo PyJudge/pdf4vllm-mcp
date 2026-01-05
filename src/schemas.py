@@ -24,6 +24,10 @@ class ListPDFsInput(BaseModel):
         default_factory=lambda: config.max_recursion_depth,
         description="Maximum recursion depth (None = unlimited)"
     )
+    name_pattern: Optional[str] = Field(
+        default=None,
+        description="Glob pattern for filename filtering (e.g., '*report*', 'doc_202?.pdf')"
+    )
 
 
 class PDFInfo(BaseModel):
@@ -31,7 +35,6 @@ class PDFInfo(BaseModel):
     name: str = Field(description="File name with extension")
     path: str = Field(description="Absolute file path for use with read_pdf")
     pages: int = Field(description="Total number of pages")
-    size_bytes: int = Field(description="File size in bytes")
 
 
 class ListPDFsOutput(BaseModel):
@@ -214,3 +217,79 @@ class ValidationResult(BaseModel):
     total_pages: Optional[int] = None
     total_images: Optional[int] = None
     suggested_ranges: Optional[List[SuggestedRange]] = None
+
+
+# ============================================================================
+# grep_pdf tool schemas
+# ============================================================================
+
+class GrepPDFInput(BaseModel):
+    """Input schema for grep_pdf tool"""
+    pattern: str = Field(
+        ...,
+        description="Search pattern (regex by default)"
+    )
+    file_path: Optional[str] = Field(
+        default=None,
+        description="Specific PDF file. If not provided, searches ALL PDFs in working_directory"
+    )
+    working_directory: str = Field(
+        default=".",
+        description="Base directory for search (only used when file_path is not provided)"
+    )
+    ignore_case: bool = Field(
+        default=False,
+        description="Case-insensitive search"
+    )
+    fixed_strings: bool = Field(
+        default=False,
+        description="Treat pattern as literal string, not regex"
+    )
+    context: int = Field(
+        default=0,
+        ge=0,
+        le=5,
+        description="Lines of context before/after match (0-5)"
+    )
+    max_count: int = Field(
+        default=20,
+        ge=1,
+        le=100,
+        description="Maximum matches to return (1-100)"
+    )
+    recursive: bool = Field(
+        default=True,
+        description="Include subdirectories when searching directory"
+    )
+
+
+class GrepMatch(BaseModel):
+    """Single match result from grep_pdf"""
+    file: str = Field(description="PDF file path")
+    page: int = Field(description="Page number (1-indexed)")
+    text: str = Field(description="Matched line text")
+
+
+class GrepPDFOutput(BaseModel):
+    """Successful grep_pdf response"""
+    matches: List[GrepMatch] = Field(description="List of matches found")
+    total: int = Field(description="Total matches returned")
+    truncated: bool = Field(description="True if results were limited by max_count")
+    files_searched: int = Field(description="Number of PDF files searched")
+
+
+class GrepPDFError(BaseModel):
+    """Error response for grep_pdf tool"""
+    error: Literal[
+        "PDFGREP_NOT_INSTALLED",
+        "DIRECTORY_NOT_FOUND",
+        "FILE_NOT_FOUND",
+        "PERMISSION_DENIED",
+        "INVALID_PATTERN",
+        "INTERNAL_ERROR"
+    ] = Field(description="Error type")
+    message: str = Field(description="Human-readable error message")
+    install_hint: Optional[str] = Field(
+        default=None,
+        description="Installation command hint (only for PDFGREP_NOT_INSTALLED)"
+    )

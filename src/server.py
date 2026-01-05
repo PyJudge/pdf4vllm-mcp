@@ -35,7 +35,7 @@ from mcp.server.stdio import stdio_server  # noqa: E402
 from mcp.server.fastmcp.utilities.types import Image  # noqa: E402
 from mcp.types import Tool, TextContent, CallToolResult  # noqa: E402
 
-from src.pdf_tools import list_pdfs_handler, read_pdf_handler  # noqa: E402
+from src.pdf_tools import list_pdfs_handler, read_pdf_handler, grep_pdf_handler  # noqa: E402
 from src.config import config  # noqa: E402
 
 
@@ -78,7 +78,10 @@ async def list_tools() -> list[Tool]:
     return [
         Tool(
             name="list_pdfs",
-            description="Find all PDF files in a directory. Always prefer this over ls or find for PDF files. Returns name, path, pages, and size for each PDF. Use the returned 'path' directly with read_pdf.",
+            description=(
+                "Find PDF files in a directory. Use name_pattern for glob filtering (e.g., '*report*'). "
+                "Returns name, path, pages for each PDF. Use the returned 'path' directly with read_pdf."
+            ),
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -97,6 +100,10 @@ async def list_tools() -> list[Tool]:
                         "description": f"Maximum recursion depth (default: {config.max_recursion_depth})",
                         "default": config.max_recursion_depth,
                         "minimum": 1
+                    },
+                    "name_pattern": {
+                        "type": "string",
+                        "description": "Glob pattern for filename filtering (e.g., '*report*', 'doc_202?.pdf')"
                     }
                 }
             }
@@ -161,6 +168,61 @@ async def list_tools() -> list[Tool]:
                 },
                 "required": ["file_path"]
             }
+        ),
+        Tool(
+            name="grep_pdf",
+            description=(
+                "Search text in PDFs. Use instead of read_pdf to find specific text. "
+                "Returns matching lines with page numbers."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "pattern": {
+                        "type": "string",
+                        "description": "Search pattern (regex by default)"
+                    },
+                    "file_path": {
+                        "type": "string",
+                        "description": "Specific PDF file. If not provided, searches ALL PDFs in working_directory"
+                    },
+                    "working_directory": {
+                        "type": "string",
+                        "description": "Base directory for search (only used when file_path is not provided)",
+                        "default": "."
+                    },
+                    "ignore_case": {
+                        "type": "boolean",
+                        "description": "Case-insensitive search",
+                        "default": False
+                    },
+                    "fixed_strings": {
+                        "type": "boolean",
+                        "description": "Treat pattern as literal string, not regex",
+                        "default": False
+                    },
+                    "context": {
+                        "type": "integer",
+                        "description": "Lines of context before/after match (0-5)",
+                        "default": 0,
+                        "minimum": 0,
+                        "maximum": 5
+                    },
+                    "max_count": {
+                        "type": "integer",
+                        "description": "Maximum matches to return (1-100)",
+                        "default": 20,
+                        "minimum": 1,
+                        "maximum": 100
+                    },
+                    "recursive": {
+                        "type": "boolean",
+                        "description": "Include subdirectories when searching directory",
+                        "default": True
+                    }
+                },
+                "required": ["pattern"]
+            }
         )
     ]
 
@@ -201,6 +263,13 @@ async def call_tool(name: str, arguments: dict) -> CallToolResult:
 
         return CallToolResult(
             content=content,
+            isError=False
+        )
+
+    elif name == "grep_pdf":
+        result_json, images = await grep_pdf_handler(arguments)
+        return CallToolResult(
+            content=[TextContent(type="text", text=result_json)],
             isError=False
         )
 

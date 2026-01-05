@@ -8,10 +8,13 @@ import pdfplumber
 import pikepdf
 import pypdfium2 as pdfium
 from PIL import Image
+import fnmatch
 import io
 import logging
 import os
 import re
+import shutil
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -19,7 +22,8 @@ from src.config import config
 from .schemas import (
     ListPDFsInput, ListPDFsOutput, PDFInfo, ListPDFsError,
     ReadPDFInput, ReadPDFSuccess, ReadPDFError,
-    PageData, ContentBlock
+    PageData, ContentBlock,
+    GrepPDFInput, GrepPDFOutput, GrepMatch, GrepPDFError
 )
 from .validators import validate_pdf_read_request
 from .image_processor import crop_image_to_max_dimension, is_header_footer_image
@@ -128,6 +132,11 @@ async def list_pdfs_handler(arguments: dict[str, Any]) -> tuple[str, list[dict]]
                     if depth > max_depth:
                         continue
 
+                # Check name pattern filter
+                if input_data.name_pattern:
+                    if not fnmatch.fnmatch(pdf_path.name.lower(), input_data.name_pattern.lower()):
+                        continue
+
                 # Get page count using pypdfium2
                 pdf_doc = pdfium.PdfDocument(str(pdf_path))
                 total_pages = len(pdf_doc)
@@ -137,8 +146,7 @@ async def list_pdfs_handler(arguments: dict[str, Any]) -> tuple[str, list[dict]]
                 pdfs.append(PDFInfo(
                     name=pdf_path.name,
                     path=str(pdf_path),
-                    pages=total_pages,
-                    size_bytes=pdf_path.stat().st_size
+                    pages=total_pages
                 ))
 
             except Exception:
@@ -639,5 +647,186 @@ async def read_pdf_handler(arguments: dict[str, Any]) -> tuple[str, list[dict]]:
         error = ReadPDFError(
             error="INVALID_PDF",
             message=f"Error processing PDF: {type(e).__name__}: {str(e)}"
+        )
+        return error.model_dump_json(indent=2), []
+
+
+def check_pdfgrep_installed() -> bool:
+    """Check if pdfgrep is available in PATH"""
+    return shutil.which("pdfgrep") is not None
+
+
+async def grep_pdf_handler(arguments: dict[str, Any]) -> tuple[str, list[dict]]:
+    """
+    Search PDF files using pdfgrep.
+
+    Args:
+        arguments: Dictionary matching GrepPDFInput schema
+
+    Returns:
+        Tuple of (JSON string, empty list) - no images for grep_pdf
+    """
+    try:
+        # 1. Check pdfgrep installation FIRST - block execution if not installed
+        if not check_pdfgrep_installed():
+            error = GrepPDFError(
+                error="PDFGREP_NOT_INSTALLED",
+                message="pdfgrep is not installed. Please install it first.",
+                install_hint="brew install pdfgrep (macOS) or apt install pdfgrep (Ubuntu)"
+            )
+            return error.model_dump_json(indent=2), []
+
+        # 2. Validate input
+        input_data = GrepPDFInput(**arguments)
+
+        # 3. Resolve target path
+        if input_data.file_path:
+            target_path = Path(input_data.file_path)
+            if not target_path.is_absolute():
+                target_path = Path.cwd() / target_path
+            target_path = target_path.resolve()
+
+            if not target_path.exists():
+                error = GrepPDFError(
+                    error="FILE_NOT_FOUND",
+                    message=f"PDF file not found: {target_path}"
+                )
+                return error.model_dump_json(indent=2), []
+
+            if not target_path.suffix.lower() == '.pdf':
+                error = GrepPDFError(
+                    error="FILE_NOT_FOUND",
+                    message=f"Not a PDF file: {target_path}"
+                )
+                return error.model_dump_json(indent=2), []
+        else:
+            target_path = Path(input_data.working_directory)
+            if not target_path.is_absolute():
+                target_path = Path.cwd() / target_path
+            target_path = target_path.resolve()
+
+            if not target_path.exists():
+                error = GrepPDFError(
+                    error="DIRECTORY_NOT_FOUND",
+                    message=f"Directory not found: {target_path}"
+                )
+                return error.model_dump_json(indent=2), []
+
+            if not target_path.is_dir():
+                error = GrepPDFError(
+                    error="DIRECTORY_NOT_FOUND",
+                    message=f"Not a directory: {target_path}"
+                )
+                return error.model_dump_json(indent=2), []
+
+        # 4. Build pdfgrep command
+        cmd = ["pdfgrep", "-n", "-H"]  # Always include page number and filename
+
+        if input_data.ignore_case:
+            cmd.append("-i")
+        if input_data.fixed_strings:
+            cmd.append("-F")
+        if input_data.context > 0:
+            cmd.extend(["-C", str(input_data.context)])
+        if input_data.max_count:
+            cmd.extend(["-m", str(input_data.max_count)])
+        if input_data.recursive and not input_data.file_path:
+            cmd.append("-r")
+
+        cmd.append(input_data.pattern)
+        cmd.append(str(target_path))
+
+        logger.info(f"Running pdfgrep command: {' '.join(cmd)}")
+
+        # 5. Execute with timeout
+        try:
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=60,
+                cwd=str(target_path.parent) if input_data.file_path else str(target_path)
+            )
+        except subprocess.TimeoutExpired:
+            error = GrepPDFError(
+                error="INTERNAL_ERROR",
+                message="Search timed out after 60 seconds"
+            )
+            return error.model_dump_json(indent=2), []
+
+        # 6. Check for errors
+        if result.returncode == 2:
+            # pdfgrep returns 2 for errors (invalid regex, etc.)
+            error_msg = result.stderr.strip() if result.stderr else "Unknown error"
+            if "Invalid" in error_msg or "regex" in error_msg.lower():
+                error = GrepPDFError(
+                    error="INVALID_PATTERN",
+                    message=f"Invalid search pattern: {error_msg}"
+                )
+            else:
+                error = GrepPDFError(
+                    error="INTERNAL_ERROR",
+                    message=f"pdfgrep error: {error_msg}"
+                )
+            return error.model_dump_json(indent=2), []
+
+        # 7. Parse output: "file.pdf:page:text" format
+        matches = []
+        files_found = set()
+
+        if result.stdout.strip():
+            for line in result.stdout.strip().split('\n'):
+                if not line or line == '--':  # Skip empty lines and context separators
+                    continue
+
+                # Parse "file:page:text" format
+                # Handle case where filename might contain ':'
+                parts = line.split(':')
+                if len(parts) >= 3:
+                    # Find the page number (should be numeric)
+                    file_parts = []
+                    page_idx = -1
+
+                    for i, part in enumerate(parts):
+                        if part.isdigit() and i > 0:
+                            page_idx = i
+                            break
+                        file_parts.append(part)
+
+                    if page_idx > 0:
+                        file_path_str = ':'.join(file_parts)
+                        try:
+                            page_num = int(parts[page_idx])
+                            text = ':'.join(parts[page_idx + 1:])
+
+                            matches.append(GrepMatch(
+                                file=file_path_str,
+                                page=page_num,
+                                text=text
+                            ))
+                            files_found.add(file_path_str)
+                        except ValueError:
+                            # Skip malformed lines
+                            continue
+
+        # 8. Return output
+        output = GrepPDFOutput(
+            matches=matches,
+            total=len(matches),
+            truncated=len(matches) >= input_data.max_count,
+            files_searched=len(files_found) if files_found else 0
+        )
+        return output.model_dump_json(indent=2), []
+
+    except PermissionError as e:
+        error = GrepPDFError(
+            error="PERMISSION_DENIED",
+            message=f"Permission denied: {str(e)}"
+        )
+        return error.model_dump_json(indent=2), []
+    except Exception as e:
+        error = GrepPDFError(
+            error="INTERNAL_ERROR",
+            message=f"Error during search: {type(e).__name__}: {str(e)}"
         )
         return error.model_dump_json(indent=2), []
