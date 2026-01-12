@@ -172,8 +172,8 @@ async def list_tools() -> list[Tool]:
         Tool(
             name="grep_pdf",
             description=(
-                "Search text in PDFs. Use instead of read_pdf to find specific text. "
-                "Returns matching lines with page numbers. "
+                "Search text in PDFs. Standard grep/rg does NOT work on PDFs (binary format). "
+                "Use this tool instead. Returns matching lines with page numbers. "
                 "NOTE: No page limit (unlike read_pdf's 10-page limit)."
             ),
             inputSchema={
