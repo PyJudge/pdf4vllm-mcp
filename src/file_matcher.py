@@ -6,6 +6,12 @@ from pathlib import Path
 from typing import List
 import difflib
 import re
+import unicodedata
+
+
+def normalize_filename(name: str) -> str:
+    """Normalize filename to NFC for cross-platform compatibility (macOS uses NFD)"""
+    return unicodedata.normalize('NFC', name.lower())
 
 
 def extract_keywords(filename: str) -> List[str]:
@@ -22,12 +28,14 @@ def extract_keywords(filename: str) -> List[str]:
     """
     keywords = []
 
-    # Extract Korean words (consecutive Korean characters)
-    korean = re.findall(r'[가-힣]+', filename)
-    keywords.extend(korean)
+    # Extract Hangul words (consecutive Hangul characters)
+    # NFC normalize for macOS NFD filenames (applies to all composed characters)
+    normalized = unicodedata.normalize('NFC', filename)
+    hangul = re.findall(r'[가-힣]+', normalized)
+    keywords.extend(hangul)
 
     # Extract English words (consecutive English characters)
-    english = re.findall(r'[a-z]+', filename.lower())
+    english = re.findall(r'[a-z]+', normalize_filename(filename))
     keywords.extend(english)
 
     # Extract numbers (consecutive digits)
@@ -61,7 +69,7 @@ def find_similar_pdfs(
         List of similar PDF file paths (relative to current directory)
     """
     requested = Path(requested_path)
-    requested_name = requested.stem.lower()  # Filename without extension (lowercase)
+    requested_name = normalize_filename(requested.stem)  # Filename without extension (lowercase, NFC)
 
     # Extract keywords (separate Korean, English, numbers)
     keywords = extract_keywords(requested_name)
@@ -109,19 +117,19 @@ def find_similar_pdfs(
     # First filter: keyword inclusion
     keyword_matches = []
     for pdf_path in all_pdfs:
-        pdf_name_lower = pdf_path.stem.lower()
-        # If any keyword is included
-        if any(kw in pdf_name_lower for kw in keywords if len(kw) >= 2):
+        pdf_name_normalized = normalize_filename(pdf_path.stem)
+        # If any keyword is included (keywords already normalized)
+        if any(kw in pdf_name_normalized for kw in keywords if len(kw) >= 2):
             keyword_matches.append(pdf_path)
 
     # Use keyword matches if available, otherwise search all
     candidates = keyword_matches if keyword_matches else all_pdfs
 
-    # Second sort: similarity
-    pdf_names = [pdf.name.lower() for pdf in candidates]
+    # Second sort: similarity (NFC normalized for cross-platform)
+    pdf_names = [normalize_filename(pdf.name) for pdf in candidates]
 
     matches = difflib.get_close_matches(
-        requested.name.lower(),  # Match with full filename
+        normalize_filename(requested.name),  # Match with full filename
         pdf_names,
         n=max_suggestions * 2,  # Find more than needed
         cutoff=cutoff
@@ -136,7 +144,7 @@ def find_similar_pdfs(
 
     for match in matches:
         for pdf_path in all_pdfs:
-            if pdf_path.name.lower() == match:
+            if normalize_filename(pdf_path.name) == match:
                 # Relative path from current directory
                 try:
                     relative = pdf_path.relative_to(Path.cwd())

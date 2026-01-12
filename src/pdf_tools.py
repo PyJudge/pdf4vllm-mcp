@@ -9,6 +9,7 @@ import pikepdf
 import pypdfium2 as pdfium
 from PIL import Image
 import fnmatch
+import unicodedata
 import io
 import logging
 import os
@@ -132,9 +133,11 @@ async def list_pdfs_handler(arguments: dict[str, Any]) -> tuple[str, list[dict]]
                     if depth > max_depth:
                         continue
 
-                # Check name pattern filter
+                # Check name pattern filter (NFC normalize for macOS NFD filenames)
                 if input_data.name_pattern:
-                    if not fnmatch.fnmatch(pdf_path.name.lower(), input_data.name_pattern.lower()):
+                    normalized_name = unicodedata.normalize('NFC', pdf_path.name.lower())
+                    normalized_pattern = unicodedata.normalize('NFC', input_data.name_pattern.lower())
+                    if not fnmatch.fnmatch(normalized_name, normalized_pattern):
                         continue
 
                 # Get page count using pypdfium2
